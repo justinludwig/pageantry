@@ -362,6 +362,7 @@ class DefaultPager implements Pager {
     /**
      * Creates an url to the specified row.
      * @param offset Row offset.
+     * @param max (optional) Custom max (useful mainly for creating template urls).
      * @param path (optional) Request path (defaults to '').
      * @param params (optional) Request parameter map of other params to include in url.
      * @return String url (never null).
@@ -377,7 +378,9 @@ class DefaultPager implements Pager {
 
         if (m.offset)
             params."$prefix$offsetName" = m.offset
-        if (max >= 0)
+        if (m.max)
+            params."$prefix$maxName" = m.max
+        else if (max >= 0)
             params."$prefix$maxName" = max
 
         "${m.path?:''}?${joinParams(params)}"
