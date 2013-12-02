@@ -6,6 +6,248 @@ class PageantryTagLib {
     static namespace = 'pageantry'
 
     /**
+     * Displays a table.
+     * Echoes class, id, title, and data-* attrs.
+     * @param in Collection of rows. The tbody tag is rendered once for each row.
+     * @param template (optional) Template row.
+     * The template is rendered as a separate table, directly below the main table,
+     * with an id of "${id}-template".
+     * @param var (optional) Row variable (defaults to "it").
+     * @param status (optional) Row-index variable (defaults to "rowIndex").
+     * @param caption (optional) Un-escaped text to render as table caption.
+     * @param pager (optional) Pager used for (optional) column header links.
+     * @param foot (optional) True duplicate header as footer to (defaults to false).
+     * @param alternating (optional) Space-speparated list of classes
+     * over which to altenatingly apply to table rows (defaults to "even odd").
+     */
+    def table = { attrs, body ->
+        def pager = this.pager = attrs.pager ?: this.pager
+        tableAttrs = new LinkedHashMap(attrs)
+
+        out << '<table' << H.attrs(
+            attrs.findAll { k,v -> k ==~ /id|class|title|data-.+/ }
+        ) << '>'
+        tableAttrs.currentTag = 'table'
+        if (attrs.caption)
+            out << caption { out << attrs.caption.encodeAsHTML() }
+        out << body()
+        out << '</table>'
+
+        // output template content rendered by tbody
+        def template = tableAttrs.templateContent
+        if (template)
+            out << '<table' << H.attrs(
+                id: attrs.id ? "${attrs.id}-template" : ''
+            ) << '><tbody>' << template << '</tbody></table>'
+
+        tableAttrs = null
+    }
+
+    /**
+     * Displays a table caption.
+     */
+    def caption = { attrs, body ->
+        out << '<caption>' << body() << '</caption>'
+    }
+
+    /**
+     * Demarcates the header of a table.
+     * The table header is rendered once for the header,
+     * and optionally a second time for the footer.
+     */
+    def thead = { attrs, body ->
+        def tableAttrs = this.tableAttrs
+        def tags = tableAttrs.foot ? ['thead','tfoot'] : ['thead']
+
+        tags.each { tag ->
+            out << '<' << tag << '>'
+            tableAttrs.currentTag = tag
+            out << body()
+            // close implicit <tr>
+            if (tableAttrs.currentTag == 'tr')
+                out << '</tr>'
+            out << '</' << tag << '>'
+            tableAttrs.currentTag = 'table'
+        }
+    }
+
+    /**
+     * Demarcates the body of a table.
+     * The table body is rendered once for each row in the table
+     * (plus once for the template row, if specified).
+     */
+    def tbody = { attrs, body ->
+        def tableAttrs = this.tableAttrs
+
+        out << '<tbody>'
+
+        def var = tableAttrs.var ?: 'it'
+        def status = tableAttrs.status ?: 'rowIndex'
+
+        tableAttrs.currentRow = -1
+        tableAttrs.in.each { row ->
+            tableAttrs.currentRow++
+            tableAttrs.currentCol = -1
+            tableAttrs.currentTag = 'tbody'
+
+            out << body((var): row, (status): tableAttrs.currentRow)
+            // close implicit <tr>
+            if (tableAttrs.currentTag == 'tr')
+                out << '</tr>'
+        }
+
+        out << '</tbody>'
+        tableAttrs.currentTag = 'table'
+
+        // render template row now, store its output for later
+        def template = tableAttrs.template
+        if (template) {
+            tableAttrs.currentCol = -1
+            tableAttrs.currentRow = -1
+            tableAttrs.currentTag = 'tbody'
+
+            tableAttrs.templateContent = body((var): template, (status): -1) +
+            // close implicit <tr>
+            (tableAttrs.currentTag == 'tr' ? '</tr>' : '')
+        }
+    }
+
+    /**
+     * Displays a table row.
+     * Echoes class, id, title, and data-* attrs.
+     * May be omitted (a single, attributeless tr is implied
+     * in thead or tbody if omitted).
+     */
+    def tr = { attrs, body ->
+        def tableAttrs = this.tableAttrs
+        def prevTag = tableAttrs.currentTag
+        def cls = attrs.class ?: ''
+        if (prevTag == 'tbody') {
+            if (!(cls instanceof Collection))
+                cls = cls.toString().trim().split(/\s+/) as List
+            // add alternating row classes
+            cls += [trClass]
+        }
+
+        out << '<tr' << H.attrs(
+            [class: cls] + attrs.findAll { k,v -> k ==~ /id|title|data-.+/ }
+        ) << '>'
+        tableAttrs.currentTag = 'tr'
+        out << body()
+        out << '</tr>'
+        tableAttrs.currentTag = prevTag
+    }
+
+    /**
+     * Displays a table header cell.
+     * Echoes class, id, title, data-*, scope, rowspan, colspan, and headers attrs.
+     * Also appends "col" attr to class of this cell and corresponding body cells.
+     * <p>
+     * If "sort" attr is specified, wraps body with link to sort by the column
+     * named by the "sort" attr; the "single" and "path" attrs apply
+     * to the generation of that link (see {@link Pager#urlForColumn}).
+     * Adds "sortable" as a class to cells with sort links; "sorted"
+     * if the specified sort is in the pager's sorting (see {@link Pager#sorting});
+     * and "primary" if the sort is first in the pager's sorting, or "secondary"
+     * if the sort is later in the pager's sorting.
+     * Also adds a "data-sort-ordinal" attr to the cell with the 1-based index
+     * of the sort in the pager's sorting.
+     */
+    def th = { attrs, body ->
+        def pager = this.pager
+        def tableAttrs = this.tableAttrs
+
+        def prevTag = tableAttrs.currentTag
+        // open implicit <tr>
+        if (prevTag != 'tr') {
+            prevTag = 'tr'
+            out << '<tr>'
+        }
+
+        def cls = attrs.class ?: ''
+        if (!(cls instanceof Collection))
+            cls = cls.toString().trim().split(/\s+/) as List
+
+        def colClass = attrs.col ?: ''
+        cls << colClass
+
+        def colClasses = tableAttrs.colClasses
+        if (!colClasses)
+            tableAttrs.colClasses = colClasses = []
+        colClasses << colClass
+
+        def ordinal = null
+        def sort = attrs.sort
+        if (sort) {
+            cls << 'sortable'
+
+            ordinal = pager.sorting?.indexOf(sort)
+            if (ordinal >= 0)
+                cls << 'sorted' << (ordinal ? 'secondary' : 'primary') << (
+                    pager.ordering?.size() >= ordinal && pager.ordering[ordinal] ?
+                    'desc' : 'asc'
+                )
+        }
+
+        out << '<th' << H.attrs(
+            [
+                class: cls,
+                'data-sort-ordinal': ordinal >= 0 ? ordinal + 1 : null,
+            ] + attrs.findAll { k,v ->
+                k ==~ /id|title|data-.+|scope|rowspan|colspan|headers/
+            }
+        ) << '>'
+        tableAttrs.currentTag = 'th'
+
+        if (sort)
+            out << '<a' << H.attrs(href: pager.urlForColumn(
+                sort: sort, single: attrs.single, path: attrs.path, params: params,
+            )) << '>'
+        out << body()
+        if (sort)
+            out << '</a>'
+
+        out << '</th>'
+        tableAttrs.currentTag = prevTag
+    }
+
+    /**
+     * Displays a table body cell.
+     * Echoes class, id, title, data-*, rowspan, colspan, and headers attrs.
+     */
+    def td = { attrs, body ->
+        def tableAttrs = this.tableAttrs
+        def prevTag = tableAttrs.currentTag
+        // open implicit <tr>
+        if (prevTag != 'tr') {
+            prevTag = 'tr'
+            // add alternating row classes
+            out << '<tr' << H.attrs(class: trClass) << '>'
+        }
+
+        tableAttrs.currentCol = tableAttrs.currentCol != null ?
+            tableAttrs.currentCol + 1 : 0
+
+        // add classes from <th>
+        def cls = attrs.class ?: ''
+        if (tableAttrs.currentCol < tableAttrs.colClasses?.size()) {
+            if (!(cls instanceof Collection))
+                cls = cls.toString().trim().split(/\s+/) as List
+            cls << tableAttrs.colClasses[tableAttrs.currentCol]
+        }
+
+        out << '<td' << H.attrs(
+            [class: cls] + attrs.findAll { k,v ->
+                k ==~ /id|title|data-.+|rowspan|colspan|headers/
+            }
+        ) << '>'
+        tableAttrs.currentTag = 'td'
+        out << body()
+        out << '</td>'
+        tableAttrs.currentTag = prevTag
+    }
+
+    /**
      * Executes body if no pager or pager total == 0.
      */
     def empty = { attrs, body ->
@@ -265,7 +507,7 @@ class PageantryTagLib {
             code: 'grails.plugin.pageantry.resize.sizes',
             default: attrs.sizes ?: '10 20 50 100 All',
             encodeAs: 'HTML',
-        ).trim().split(/\s+/)
+        ).trim().split(/\s+/) as List
 
         def all = attrs.all ?: pager.hasProperty('maxMax') ? pager.maxMax : 1000
         def selected = pager.max as String
@@ -323,5 +565,24 @@ class PageantryTagLib {
 
     protected void setPager(Pager x) {
         request.pager = x
+    }
+
+    protected Map getTableAttrs() {
+        request.pageantryTableAttrs
+    }
+
+    protected void setTableAttrs(Map x) {
+        request.pageantryTableAttrs = x
+    }
+
+    protected String getTrClass() {
+        def alt = tableAttrs.alternating
+        if (alt == '') return ''
+
+        if (!(alt instanceof Collection))
+            tableAttrs.alternating = alt =
+                (alt ?: 'even odd').toString().trim().split(/\s+/) as List
+
+        alt[(tableAttrs.currentRow?:0) % alt.size()]
     }
 }
