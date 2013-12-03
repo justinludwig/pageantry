@@ -57,6 +57,18 @@ class DefaultPager implements Pager {
      * For example, for mysql specify {"`$it`"}.
      */
     Closure quoteColumnName = { String s -> s }
+    /**
+     * Closure that compares two rows in a list (a and b)
+     * with the specified sort column and order.
+     * @param a Row one.
+     * @param b Row two.
+     * @param sort Sort column.
+     * @param order True for descending.
+     * @return Negative number if a < b, positive number if a > b, 0 if a == b.
+     */
+    Closure rowComparator = { a, b, String sort, boolean order ->
+        (a[sort] <=> b[sort]) * (order ? -1 : 1)
+    }
 
     /**
      * Creates new default pager.
@@ -190,6 +202,43 @@ class DefaultPager implements Pager {
         sql.join('').trim()
     }
 
+    /**
+     * Slices the specified full list with the current paging,
+     * using the optional comparator to first sort the list.
+     * For safety, sorts only if validSort has been set.
+     * @param list Full list of rows.
+     * @param comparator (optional) Closure to compare two rows
+     * (defaults to {@link #rowComparator}).
+     */
+    List slice(Collection list, Closure comparator = null) {
+        total = list?.size() ?: 0
+        if (!max || offset >= total) return []
+
+        if (sorting || baseSort) {
+            comparator = comparator ?: rowComparator
+
+            // ensure ordering list is at least as long as sorting list
+            if (sorting.size() - ordering.size() > 0)
+                (sorting.size() - ordering.size()).times { ordering << false }
+
+            list = list.sort(false) { a,b ->
+                // loop through all sorting levels
+                // and keep comparing while result is 0,
+                // trying baseSort if all levels were 0
+                def diff = 0, index = 0
+                if (validSort)
+                    diff = sorting.inject(diff) { diffMemo, sort ->
+                        diffMemo ?: comparator(a, b, sort, ordering[index++])
+                    }
+                if (!diff && baseSort)
+                    diff = comparator(a, b, baseSort, baseOrder)
+                return diff
+            }
+        }
+
+        list[(offset)..(Math.min(offset + max, total) - 1)]
+    }
+
     protected int totalPages = -1
     /** Total number of pages, or -1 if unknown. */
     int getTotalPages() {
@@ -316,7 +365,7 @@ class DefaultPager implements Pager {
     String sortForColumn(String column, boolean single = false) {
         if (!column) return ''
 
-        // ensuring ordering list is at least as long as sorting list
+        // ensure ordering list is at least as long as sorting list
         if (sorting.size() - ordering.size() > 0)
             (sorting.size() - ordering.size()).times { ordering << false }
 

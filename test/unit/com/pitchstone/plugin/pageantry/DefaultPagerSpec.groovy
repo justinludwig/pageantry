@@ -8,6 +8,10 @@ import spock.lang.Unroll
 @Mixin(GrailsUnitTestMixin)
 class DefaultPagerSpec extends Specification {
 
+    static List TEST_ROWS = (0..99).collect { [
+        id: it, name: it as String, letter: ((it % 26) + 65) as Character,
+    ] }
+
     def setup() {
         mockCodec URLCodec
     }
@@ -513,6 +517,109 @@ class DefaultPagerSpec extends Specification {
             baseSort: 'bar',
             baseOrder: true,
         ).sql == 'ORDER BY foo ASC, bar ASC, baz ASC, bar DESC LIMIT 10'
+    }
+
+
+    def "slice of null list is empty"() {
+        expect: new DefaultPager().slice(null) == []
+    }
+
+    def "slice of empty list is empty"() {
+        expect: new DefaultPager().slice([]) == []
+    }
+
+    def "slice of test list with defaults"() {
+        expect: new DefaultPager().slice(TEST_ROWS)*.id == (0..9).collect { it }
+    }
+
+    def "when max is zeroed, slice is empty"() {
+        expect: new DefaultPager(max: 0).slice(TEST_ROWS) == []
+    }
+
+    def "when offset beyond list end, slice is empty"() {
+        expect: new DefaultPager(offset: 100).slice(TEST_ROWS) == []
+    }
+
+    def "when offset and max specified, slice is shifted"() {
+        expect: new DefaultPager(offset: 40, max: 20).slice(TEST_ROWS)*.id ==
+            (40..59).collect { it }
+    }
+
+    def "when sort specified without valid sort, slice does not sort"() {
+        expect: new DefaultPager(
+            sorting: ['letter', 'name', 'id'],
+        ).slice(TEST_ROWS)*.id == (0..9).collect { it }
+    }
+
+    def "when sort specified with valid sort, slice sorts then slices"() {
+        expect: new DefaultPager(
+            sorting: ['letter', 'name', 'id'],
+            validSort: [''],
+        ).slice(TEST_ROWS)*.id == [0, 26, 52, 78, 1, 27, 53, 79, 2, 28]
+    }
+
+    def "when order specified, slice does not sort"() {
+        expect: new DefaultPager(
+            ordering: [true, false, true],
+            validSort: [''],
+        ).slice(TEST_ROWS)*.id == (0..9).collect { it }
+    }
+
+    def "when sort and order specified, slice sorts then slices"() {
+        expect: new DefaultPager(
+            sorting: ['letter', 'name', 'id'],
+            ordering: [true, false, true],
+            validSort: [''],
+        ).slice(TEST_ROWS)*.id == [25, 51, 77, 24, 50, 76, 23, 49, 75, 22]
+    }
+
+    def "when baseSort specified, slice sorts then slices"() {
+        expect: new DefaultPager(
+            baseSort: 'letter',
+        ).slice(TEST_ROWS)*.id == [0, 26, 52, 78, 1, 27, 53, 79, 2, 28]
+    }
+
+    def "when baseOrder specified, slice does not sort"() {
+        expect: new DefaultPager(
+            baseOrder: true,
+        ).slice(TEST_ROWS)*.id == (0..9).collect { it }
+    }
+
+    def "when baseSort and basOrder specified, slice sorts then slices"() {
+        expect: new DefaultPager(
+            baseSort: 'letter',
+            baseOrder: true,
+        ).slice(TEST_ROWS)*.id == [25, 51, 77, 24, 50, 76, 23, 49, 75, 22]
+    }
+
+    def "when sorting and baseSort and basOrder specified, slice sorts then slices"() {
+        expect: new DefaultPager(
+            sorting: ['letter'],
+            ordering: [true],
+            validSort: [''],
+            baseSort: 'name',
+            baseOrder: true,
+        ).slice(TEST_ROWS)*.id == [77, 51, 25, 76, 50, 24, 75, 49, 23, 74]
+    }
+
+    def "slice sorts with specified comparator"() {
+        setup:
+            def defaultComparator = new DefaultPager().rowComparator
+            def customComparator = { a, b, String sort, boolean order ->
+                switch (sort) {
+                    case 'foo': sort = 'letter'; break
+                    case 'bar': sort = 'name'; break
+                    case 'baz': sort = 'id'; break
+                    default: return 0
+                }
+                defaultComparator a, b, sort, order
+            }
+        expect: new DefaultPager(
+            sorting: ['foo', 'bar', 'baz'],
+            ordering: [true, false, true],
+            validSort: [''],
+        ).slice(TEST_ROWS, customComparator)*.id ==
+            [25, 51, 77, 24, 50, 76, 23, 49, 75, 22]
     }
 
 
