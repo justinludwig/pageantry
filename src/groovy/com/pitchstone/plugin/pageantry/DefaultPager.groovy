@@ -15,7 +15,10 @@ class DefaultPager implements Pager {
     int max = 10
     /** List of columns by which to sort. */
     List<String> sorting = []
-    /** List of asceding/descending values (false = ascend / true = descend). */
+    /**
+     * List of asceding/descending values (false = ascend / true = descend).
+     * Must be same length as {@link #sorting}.
+     */
     List<Boolean> ordering = []
 
     /** Total number of rows, or -1 if unknown. */
@@ -355,6 +358,8 @@ class DefaultPager implements Pager {
         def sort = sortForColumn(m.sort, !!m.single)
         if (sort)
             params."$prefix$sortName" = sort
+        if (max >= 0)
+            params."$prefix$maxName" = max
 
         "${m.path?:''}?${joinParams(params)}"
     }

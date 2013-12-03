@@ -15,7 +15,10 @@ interface Pager {
     int max
     /** List of columns by which to sort. */
     List<String> sorting
-    /** List of asceding/descending values (false = ascend / true = descend). */
+    /**
+     * List of asceding/descending values (false = ascend / true = descend).
+     * Must be same length as {@link #sorting}.
+     */
     List<Boolean> ordering
 
     /** Total number of rows, or -1 if unknown. */

@@ -45,8 +45,8 @@ class PageantryTagLibSpec extends Specification {
         ]) == '''
             <table>
                 <thead><tr>
-                    <th class="sortable"><a href="?sort=id">ID</a></th>
-                    <th class="sortable"><a href="?sort=name">Name</a></th>
+                    <th class="sortable"><a href="?sort=id&amp;max=10">ID</a></th>
+                    <th class="sortable"><a href="?sort=name&amp;max=10">Name</a></th>
                 </tr></thead>
                 <tbody>
                     <tr class="even"><td>one</td><td>ONE</td></tr>
@@ -83,10 +83,10 @@ class PageantryTagLibSpec extends Specification {
             <table>
                 <thead><tr>
                     <th class="sortable sorted primary asc" data-sort-ordinal="1">
-                        <a href="?sort=-id-name">ID</a>
+                        <a href="?sort=-id-name&amp;max=10">ID</a>
                     </th>
                     <th class="sortable sorted secondary desc" data-sort-ordinal="2">
-                        <a href="?sort=-name+id">Name</a>
+                        <a href="?sort=-name+id&amp;max=10">Name</a>
                     </th>
                 </tr></thead>
                 <tbody>
@@ -121,8 +121,8 @@ class PageantryTagLibSpec extends Specification {
         ]) == '''
             <table>
                 <thead><tr>
-                    <th class="sortable"><a href="?sort=id">ID</a></th>
-                    <th class="sortable"><a href="?sort=name">Name</a></th>
+                    <th class="sortable"><a href="?sort=id&amp;max=10">ID</a></th>
+                    <th class="sortable"><a href="?sort=name&amp;max=10">Name</a></th>
                 </tr></thead>
                 <tbody>
                     <tr class="even"><td id="x0">one</td><td>ONE</td></tr>
@@ -192,32 +192,32 @@ class PageantryTagLibSpec extends Specification {
                 <thead>
                     <tr>
                         <th class="number sortable" id="col-id">
-                            <a href="?sort=id">ID</a>
+                            <a href="?sort=id&amp;max=10">ID</a>
                         </th>
                         <th class="text sortable" id="col-name">
-                            <a href="?sort=name">Name</a>
+                            <a href="?sort=name&amp;max=10">Name</a>
                         </th>
                         <th class="blank delete" id="col-delete" data-ref="delete"></th>
                     </tr>
                     <tr class="continued">
                         <th class="sortable" id="col-desc" colspan="3">
-                            <a href="?sort=description">Description</a>
+                            <a href="?sort=description&amp;max=10">Description</a>
                         </th>
                     </tr>
                 </thead>
                 <tfoot>
                     <tr>
                         <th class="number sortable" id="col-id">
-                            <a href="?sort=id">ID</a>
+                            <a href="?sort=id&amp;max=10">ID</a>
                         </th>
                         <th class="text sortable" id="col-name">
-                            <a href="?sort=name">Name</a>
+                            <a href="?sort=name&amp;max=10">Name</a>
                         </th>
                         <th class="blank delete" id="col-delete" data-ref="delete"></th>
                     </tr>
                     <tr class="continued">
                         <th class="sortable" id="col-desc" colspan="3">
-                            <a href="?sort=description">Description</a>
+                            <a href="?sort=description&amp;max=10">Description</a>
                         </th>
                     </tr>
                 </tfoot>

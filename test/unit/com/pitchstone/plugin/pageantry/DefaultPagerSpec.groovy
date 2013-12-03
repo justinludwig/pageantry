@@ -1009,14 +1009,14 @@ class DefaultPagerSpec extends Specification {
         expect: new DefaultPager(
             sorting: ['foo', 'bar', 'baz'],
             ordering: [true, false, true],
-        ).urlForColumn(sort: 'bar') == '?sort=bar-foo-baz'
+        ).urlForColumn(sort: 'bar') == '?sort=bar-foo-baz&max=10'
     }
 
     def "when single column specified, sort url is single sort param"() {
         expect: new DefaultPager(
             sorting: ['foo', 'bar', 'baz'],
             ordering: [true, false, true],
-        ).urlForColumn(sort: 'bar', single: true) == '?sort=bar'
+        ).urlForColumn(sort: 'bar', single: true) == '?sort=bar&max=10'
     }
 
     def "when custom paging params configured, sort url uses custom params"() {
@@ -1024,7 +1024,7 @@ class DefaultPagerSpec extends Specification {
             sorting: ['foo', 'bar', 'baz'],
             ordering: [true, false, true],
             prefix: 'x.', sortName: 's',
-        ).urlForColumn(sort: 'bar') == '?x.s=bar-foo-baz'
+        ).urlForColumn(sort: 'bar') == '?x.s=bar-foo-baz&x.max=10'
     }
 
     def "when offset and max configured, sort url does not include them"() {
@@ -1032,14 +1032,14 @@ class DefaultPagerSpec extends Specification {
             sorting: ['foo', 'bar', 'baz'],
             ordering: [true, false, true],
             offset: 100, max: 10,
-        ).urlForColumn(sort: 'bar') == '?sort=bar-foo-baz'
+        ).urlForColumn(sort: 'bar') == '?sort=bar-foo-baz&max=10'
     }
 
     def "when path specified, sort url includes path"() {
         expect: new DefaultPager(
             sorting: ['foo', 'bar', 'baz'],
             ordering: [true, false, true],
-        ).urlForColumn(sort: 'bar', path: '/x') == '/x?sort=bar-foo-baz'
+        ).urlForColumn(sort: 'bar', path: '/x') == '/x?sort=bar-foo-baz&max=10'
     }
 
     def "when non-removable params specified, sort url includes other params"() {
@@ -1047,7 +1047,7 @@ class DefaultPagerSpec extends Specification {
             sorting: ['foo', 'bar', 'baz'],
             ordering: [true, false, true],
         ).urlForColumn(sort: 'bar', params: [q: 'p', a: null]) ==
-            '?q=p&a&sort=bar-foo-baz'
+            '?q=p&a&sort=bar-foo-baz&max=10'
     }
 
     def "when action params specified, sort url does not inclued action params"() {
@@ -1056,38 +1056,38 @@ class DefaultPagerSpec extends Specification {
             ordering: [true, false, true],
         ).urlForColumn(sort: 'bar', params: [
             q: 'p', a: null, controller: 'x', action: 'y', id: 'z',
-        ]) == '?q=p&a&sort=bar-foo-baz'
+        ]) == '?q=p&a&sort=bar-foo-baz&max=10'
     }
 
-    def "when default paging params specified, sort url does not inclued paging params"() {
+    def "when default paging params specified, sort url does not include paging from params"() {
         expect: new DefaultPager(
             sorting: ['foo', 'bar', 'baz'],
             ordering: [true, false, true],
         ).urlForColumn(sort: 'bar', params: [
-            q: 'p', a: null, off: '100', max: '10', sort: '-foo bar-baz',
-        ]) == '?q=p&a&sort=bar-foo-baz'
+            q: 'p', a: null, off: '100', max: '100', sort: '-foo bar-baz',
+        ]) == '?q=p&a&sort=bar-foo-baz&max=10'
     }
 
-    def "when custom paging params specified, sort url does not inclued paging params"() {
+    def "when custom paging params specified, sort url does not include paging from params"() {
         expect: new DefaultPager(
             sorting: ['foo', 'bar', 'baz'],
             ordering: [true, false, true],
             prefix: 'x.', offsetName: 'o', maxName: 'm', sortName: 's',
         ).urlForColumn(sort: 'bar', params: [
-            q: 'p', a: null, 'x.o': '100', 'x.m': '10', 'x.s': '-foo bar-baz',
-        ]) == '?q=p&a&x.s=bar-foo-baz'
+            q: 'p', a: null, 'x.o': '100', 'x.m': '100', 'x.s': '-foo bar-baz',
+        ]) == '?q=p&a&x.s=bar-foo-baz&x.m=10'
     }
 
     def "when no column specified, sort url includes everything but sort param"() {
         expect: new DefaultPager(
             sorting: ['foo', 'bar', 'baz'],
             ordering: [true, false, true],
-            offset: 100, max: 10,
+            offset: 100, max: 100,
             prefix: 'x.', offsetName: 'o', maxName: 'm', sortName: 's',
         ).urlForColumn(path: '/x', params:[
             q: 'p', a: null, controller: 'x', action: 'y', id: 'z',
-            'x.o': '100', 'x.m': '10', 'x.s': '-foo bar-baz',
-        ]) == '/x?q=p&a'
+            'x.o': '100', 'x.m': '100', 'x.s': '-foo bar-baz',
+        ]) == '/x?q=p&a&x.m=100'
     }
 
     def "sort url escapes query params"() {
@@ -1097,7 +1097,7 @@ class DefaultPagerSpec extends Specification {
             prefix: '//', sortName: '%%',
         ).urlForColumn(sort: 'bar', path: '/x+y;z', params:[
             'x+y;z': 'http://w3.org/q?=p&a'
-        ]) == '/x+y;z?x%2By%3Bz=http%3A%2F%2Fw3.org%2Fq%3F%3Dp%26a&%2F%2F%25%25=-bar+foo+baz'
+        ]) == '/x+y;z?x%2By%3Bz=http%3A%2F%2Fw3.org%2Fq%3F%3Dp%26a&%2F%2F%25%25=-bar+foo+baz&%2F%2Fmax=10'
     }
 
 
