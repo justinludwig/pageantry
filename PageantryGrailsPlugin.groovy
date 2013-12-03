@@ -2,32 +2,35 @@ class PageantryGrailsPlugin {
     // the plugin version
     def version = "0.1"
     // the version or versions of Grails the plugin is designed for
-    def grailsVersion = "2.1 > *"
+    def grailsVersion = "2.0 > *"
     // the other plugins this plugin depends on
     def dependsOn = [:]
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
-        "grails-app/views/error.gsp"
+        'grails-app/views/error.gsp',
+        'grails-app/*/test/*.*',
     ]
 
-    // TODO Fill in these fields
     def title = "Pageantry Plugin" // Headline display name of the plugin
-    def author = "Your name"
-    def authorEmail = ""
-    def description = '''\
-Brief summary/description of the plugin.
-'''
+    def author = "Justin Ludwig"
+    def authorEmail = "justin@pitchstonechnology.com"
+    def description = '''
+Provides table paging and sorting taglib.
+'''.trim()
 
     // URL to the plugin's documentation
-    def documentation = "http://grails.org/plugin/pageantry"
+    def documentation = ''//"http://grails.org/plugin/pageantry"
 
     // Extra (optional) plugin metadata
 
     // License: one of 'APACHE', 'GPL2', 'GPL3'
-//    def license = "APACHE"
+    def license = "APACHE"
 
     // Details of company behind the plugin (if there is one)
-//    def organization = [ name: "My Company", url: "http://www.my-company.com/" ]
+    def organization = [
+        name: "PitchStone Technology",
+        url: "http://www.pitchstonetechnology.com/",
+    ]
 
     // Any additional developers beyond the author specified above.
 //    def developers = [ [ name: "Joe Bloggs", email: "joe@bloggs.net" ]]
