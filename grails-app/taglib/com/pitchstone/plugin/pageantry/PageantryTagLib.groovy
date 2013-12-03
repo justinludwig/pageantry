@@ -15,10 +15,12 @@ class PageantryTagLib {
      * @param var (optional) Row variable (defaults to "it").
      * @param status (optional) Row-index variable (defaults to "rowIndex").
      * @param caption (optional) Un-escaped text to render as table caption.
-     * @param pager (optional) Pager used for (optional) column header links.
      * @param foot (optional) True duplicate header as footer to (defaults to false).
      * @param alternating (optional) Space-speparated list of classes
      * over which to altenatingly apply to table rows (defaults to "even odd").
+     * @param pager (optional) Pager used for (optional) column header links.
+     * @param SingleSort (optional) True to limit sort links
+     * to a single sorting column * (defaults to false).
      */
     def table = { attrs, body ->
         def pager = this.pager = attrs.pager ?: this.pager
@@ -144,8 +146,7 @@ class PageantryTagLib {
      * Also appends "col" attr to class of this cell and corresponding body cells.
      * <p>
      * If "sort" attr is specified, wraps body with link to sort by the column
-     * named by the "sort" attr; the "single" and "path" attrs apply
-     * to the generation of that link (see {@link Pager#urlForColumn}).
+     * named by the "sort" attr.
      * Adds "sortable" as a class to cells with sort links; "sorted"
      * if the specified sort is in the pager's sorting (see {@link Pager#sorting});
      * and "primary" if the sort is first in the pager's sorting, or "secondary"
@@ -201,7 +202,7 @@ class PageantryTagLib {
 
         if (sort)
             out << '<a' << H.attrs(href: pager.urlForColumn(
-                sort: sort, single: attrs.single, path: attrs.path, params: params,
+                sort: sort, single: tableAttrs.singleSort, params: params,
             )) << '>'
         out << body()
         if (sort)
