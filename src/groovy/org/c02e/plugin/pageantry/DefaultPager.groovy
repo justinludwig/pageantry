@@ -1,4 +1,4 @@
-package com.pitchstone.plugin.pageantry
+package org.c02e.plugin.pageantry
 
 /**
  * Default pagenation calculator.

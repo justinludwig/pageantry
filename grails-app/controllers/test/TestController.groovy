@@ -1,6 +1,6 @@
 package test
 
-import com.pitchstone.plugin.pageantry.DefaultPager
+import org.c02e.plugin.pageantry.DefaultPager
 
 class TestController {
     def testService

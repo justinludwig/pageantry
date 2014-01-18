@@ -1,6 +1,6 @@
 package test
 
-import com.pitchstone.plugin.pageantry.Pager
+import org.c02e.plugin.pageantry.Pager
 
 class TestService {
     static transactional = false

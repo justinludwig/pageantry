@@ -1,0 +1,27 @@
+Pageantry Plugin
+================
+
+This grails plugin provides:
+
+    * an interface for paging/sorting calculations (`org.c02e.plugin.pageantry.Pager`)
+    * an implementation for that interface (`org.c02e.plugin.pageantry.DefaultPager`)
+    * a taglib for display paging/sorting links (`org.c02e.plugin.pageantry.PageantryTagLib`)
+
+The taglib provides the following tags:
+
+    * `<pageantry:empty>`: displays pager empty message
+    * `<pageantry:notempty>`: displays pager not-empty message
+    * `<pageantry:container>`: paging wrapper
+    * `<pageantry:item>`: paging item
+    * `<pageantry:prevnext>`: displays paging prev/next links
+    * `<pageantry:pages>`: displays (individual) page links
+    * `<pageantry:total>`: displays pager total message
+    * `<pageantry:resize>`: displays resize dropdown
+    * `<pageantry:table>`: displays a table
+    * `<pageantry:caption>`: table caption
+    * `<pageantry:thead>`: table header/footer section
+    * `<pageantry:tbody>`: table body section
+    * `<pageantry:tr>`: table row
+    * `<pageantry:th>`: table header/footer cell (with sorting)
+    * `<pageantry:td>`: table body cell
+

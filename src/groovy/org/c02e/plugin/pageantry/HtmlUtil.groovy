@@ -1,4 +1,4 @@
-package com.pitchstone.plugin.pagentry
+package org.c02e.plugin.pagentry
 
 class HtmlUtil {
 

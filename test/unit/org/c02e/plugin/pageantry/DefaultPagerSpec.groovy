@@ -1,4 +1,4 @@
-package com.pitchstone.plugin.pageantry
+package org.c02e.plugin.pageantry
 
 import grails.test.mixin.support.GrailsUnitTestMixin
 import org.codehaus.groovy.grails.plugins.codecs.URLCodec

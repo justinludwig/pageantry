@@ -1,6 +1,6 @@
-package com.pitchstone.plugin.pageantry
+package org.c02e.plugin.pageantry
 
-import com.pitchstone.plugin.pagentry.HtmlUtil as H
+import org.c02e.plugin.pagentry.HtmlUtil as H
 
 class PageantryTagLib {
     static namespace = 'pageantry'
