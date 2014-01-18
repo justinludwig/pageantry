@@ -178,28 +178,45 @@ class DefaultPager implements Pager {
      * For safety, includes sorting values only if validSort has been set.
      */
     String getSql() {
+        [sqlOrder, sqlLimit].findAll { it }.join(' ')
+    }
+
+    /** 
+     * SQL ORDER clause.
+     * For safety, includes sorting values only if validSort has been set.
+     */
+    String getSqlOrder() {
         def sql = []
 
         if (validSort)
             sorting.eachWithIndex { sort, index ->
                 sql << (sql ? ',' : 'ORDER BY')
                 def order = ordering.size() > index ? ordering[index] : ''
-                sql << " ${quoteColumnName(sort)} ${order?'DESC':'ASC'}"
+                sql << " ${quoteColumnName(sort)} ${order ? 'DESC' : 'ASC'}"
             }
 
         if (baseSort)
             sql << """
                 ${sql ? ',' : 'ORDER BY'}
                 ${quoteColumnName(baseSort)}
-                ${baseOrder?'DESC':'ASC'}
+                ${baseOrder ? 'DESC' : 'ASC'}
             """.trim().replaceAll(/\s+/, ' ')
 
-        if (max > 0)
-            sql << " LIMIT ${max}"
-        if (offset > 0)
-            sql << " OFFSET ${offset}"
+        sql.join('')
+    }
 
-        sql.join('').trim()
+    /** 
+     * SQL LIMIT clause.
+     */
+    String getSqlLimit() {
+        def sql = []
+
+        if (max > 0)
+            sql << "LIMIT ${max}"
+        if (offset > 0)
+            sql << "OFFSET ${offset}"
+
+        sql.join(' ')
     }
 
     /**
