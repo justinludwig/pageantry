@@ -209,6 +209,16 @@ class DefaultPagerSpec extends Specification {
             pager.ordering == [true, false]
     }
 
+    def "pager sets only translated sort columns"() {
+        when: def pager = new DefaultPager(
+            params: [sort: 'foo-bar baz'],
+            translatedSort: [bar: 'y.bar', baz: 'z.baz'],
+        )
+        then:
+            pager.sorting == ['bar', 'baz']
+            pager.ordering == [true, false]
+    }
+
 
     def "when sort set to null, sort is null"() {
         setup: def pager = new DefaultPager()
@@ -462,12 +472,27 @@ class DefaultPagerSpec extends Specification {
         ).sql == 'ORDER BY foo ASC, bar ASC, baz ASC LIMIT 10'
     }
 
+    def "when sort specified with translatedSort, sql has sort, order, and default max"() {
+        expect: new DefaultPager(
+            sorting: ['foo', 'bar', 'baz'],
+            translatedSort: [bar: 'y.bar', baz: 'z.baz'],
+        ).sql == 'ORDER BY foo ASC, y.bar ASC, z.baz ASC LIMIT 10'
+    }
+
     def "when sort specified with quote closure, sql has quoted sort, order, and default max"() {
         expect: new DefaultPager(
             sorting: ['foo', 'bar', 'baz'],
             validSort: [''],
             config: [quoteColumnName: { "`$it`" }],
         ).sql == 'ORDER BY `foo` ASC, `bar` ASC, `baz` ASC LIMIT 10'
+    }
+
+    def "when sort specified with translate closure, sql has quoted sort, order, and default max"() {
+        expect: new DefaultPager(
+            sorting: ['foo', 'bar', 'baz'],
+            validSort: [''],
+            translateSortToColumn: { it == 'baz' ? 'SUM(baz)' : it },
+        ).sql == 'ORDER BY foo ASC, bar ASC, SUM(baz) ASC LIMIT 10'
     }
 
     def "when order specified, sql has default max"() {
@@ -519,6 +544,15 @@ class DefaultPagerSpec extends Specification {
         ).sql == 'ORDER BY foo ASC, bar ASC, baz ASC, bar DESC LIMIT 10'
     }
 
+    def "when sorting and translatedSort and baseSort and baseOrder specified, sql has baseSort translated"() {
+        expect: new DefaultPager(
+            sorting: ['foo', 'bar', 'baz'],
+            translatedSort: [bar: 'y.bar', baz: 'z.baz'],
+            baseSort: 'bar',
+            baseOrder: true,
+        ).sql == 'ORDER BY foo ASC, y.bar ASC, z.baz ASC, y.bar DESC LIMIT 10'
+    }
+
 
     def "slice of null list is empty"() {
         expect: new DefaultPager().slice(null) == []
@@ -555,6 +589,13 @@ class DefaultPagerSpec extends Specification {
         expect: new DefaultPager(
             sorting: ['letter', 'name', 'id'],
             validSort: [''],
+        ).slice(TEST_ROWS)*.id == [0, 26, 52, 78, 1, 27, 53, 79, 2, 28]
+    }
+
+    def "when sort specified with translated sort, slice sorts then slices"() {
+        expect: new DefaultPager(
+            sorting: ['character', 'name', 'identifier'],
+            translatedSort: [character: 'letter', identifier: 'id'],
         ).slice(TEST_ROWS)*.id == [0, 26, 52, 78, 1, 27, 53, 79, 2, 28]
     }
 
@@ -598,6 +639,16 @@ class DefaultPagerSpec extends Specification {
             ordering: [true],
             validSort: [''],
             baseSort: 'name',
+            baseOrder: true,
+        ).slice(TEST_ROWS)*.id == [77, 51, 25, 76, 50, 24, 75, 49, 23, 74]
+    }
+
+    def "when sorting and translatedSort and baseSort and basOrder specified, sorting translated"() {
+        expect: new DefaultPager(
+            sorting: ['character'],
+            ordering: [true],
+            translatedSort: [character: 'letter', title: 'name'],
+            baseSort: 'title',
             baseOrder: true,
         ).slice(TEST_ROWS)*.id == [77, 51, 25, 76, 50, 24, 75, 49, 23, 74]
     }

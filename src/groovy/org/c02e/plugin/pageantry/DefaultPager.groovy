@@ -33,7 +33,12 @@ class DefaultPager implements Pager {
     boolean baseOrder
 
     /** List of valid sort column names, or empty to not validate names. */
-    List validSort = []
+    List<String> validSort = []
+    /** 
+     * Map of public column names to literal column names.
+     * If validSort not set, the keys of this map are used for validSort.
+     */
+    Map<String,String> translatedSort = [:]
     /** Maximum offset, or zero not to limit maximum offset. */
     int maxOffset = 0
     /** Maximum offset, or zero not to limit maximum max. */
@@ -54,9 +59,16 @@ class DefaultPager implements Pager {
     List<String> actionParams = ['controller', 'action', 'id']
     /**
      * Closure that quotes the specified column name.
-     * For example, for mysql specify {"`$it`"}.
+     * For example, for mysql specify
+     * { s -&gt; s.split(/\./).collect { "`$it`" }.join('.') }.
      */
     Closure quoteColumnName = { String s -> s }
+    /**
+     * Closure that translates a conceptual sort name to literal column name.
+     * For example, this might translate 'total' to 'SUM(widget_count)'
+     * or to 'production_summary.widget_count', etc.
+     */
+    Closure translateSortToColumn = { String s -> translatedSort[s] ?: s }
     /**
      * Closure that compares two rows in a list (a and b)
      * with the specified sort column and order.
@@ -155,7 +167,13 @@ class DefaultPager implements Pager {
             ordering << o
     }
 
-    /** Map for GORM pagination. */
+    List<String> getValidSort() {
+        if (!validSort && translatedSort)
+            validSort = translatedSort.keySet() as List
+        return validSort
+    }
+
+    /** Map for GORM pagination (using translated sorting). */
     Map getMap() {
         def m = [:]
 
@@ -163,10 +181,10 @@ class DefaultPager implements Pager {
         if (max > 0) m.max = max
 
         if (sort) {
-            m.sort = sort
+            m.sort = translateSortToColumn(sort)
             m.order = order
         } else if (baseSort) {
-            m.sort = baseSort
+            m.sort = translateSortToColumn(baseSort)
             m.order = !baseOrder ? 'asc' : 'desc'
         }
 
@@ -188,17 +206,18 @@ class DefaultPager implements Pager {
     String getSqlOrder() {
         def sql = []
 
-        if (validSort)
+        if (getValidSort())
             sorting.eachWithIndex { sort, index ->
                 sql << (sql ? ',' : 'ORDER BY')
                 def order = ordering.size() > index ? ordering[index] : ''
-                sql << " ${quoteColumnName(sort)} ${order ? 'DESC' : 'ASC'}"
+                def col = quoteColumnName(translateSortToColumn(sort))
+                sql << " ${col} ${order ? 'DESC' : 'ASC'}"
             }
 
         if (baseSort)
             sql << """
                 ${sql ? ',' : 'ORDER BY'}
-                ${quoteColumnName(baseSort)}
+                ${quoteColumnName(translateSortToColumn(baseSort))}
                 ${baseOrder ? 'DESC' : 'ASC'}
             """.trim().replaceAll(/\s+/, ' ')
 
@@ -234,6 +253,11 @@ class DefaultPager implements Pager {
         if (sorting || baseSort) {
             comparator = comparator ?: rowComparator
 
+            def translatedSorting = getValidSort() ? sorting.collect {
+                translateSortToColumn it
+            }: []
+            def translatedBaseSort = translateSortToColumn(baseSort)
+
             // ensure ordering list is at least as long as sorting list
             if (sorting.size() - ordering.size() > 0)
                 (sorting.size() - ordering.size()).times { ordering << false }
@@ -243,12 +267,11 @@ class DefaultPager implements Pager {
                 // and keep comparing while result is 0,
                 // trying baseSort if all levels were 0
                 def diff = 0, index = 0
-                if (validSort)
-                    diff = sorting.inject(diff) { diffMemo, sort ->
-                        diffMemo ?: comparator(a, b, sort, ordering[index++])
-                    }
-                if (!diff && baseSort)
-                    diff = comparator(a, b, baseSort, baseOrder)
+                diff = translatedSorting.inject(diff) { diffMemo, sort ->
+                    diffMemo ?: comparator(a, b, sort, ordering[index++])
+                }
+                if (!diff && translatedBaseSort)
+                    diff = comparator(a, b, translatedBaseSort, baseOrder)
                 return diff
             }
         }
@@ -362,6 +385,7 @@ class DefaultPager implements Pager {
     void setSortParam(String s) {
         if (!s) return
 
+        def validSort = getValidSort()
         sorting = []
         ordering = []
 
