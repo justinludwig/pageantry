@@ -237,14 +237,17 @@ class PageantryTagLib {
             cls << tableAttrs.colClasses[tableAttrs.currentCol]
         }
 
-        out << '<td' << H.attrs(
+        // allow th to be used for tag
+        def tag = attrs.tag ?: 'td'
+
+        out << '<' << tag << H.attrs(
             [class: cls] + attrs.findAll { k,v ->
-                k ==~ /id|title|data-.+|rowspan|colspan|headers/
+                k ==~ /id|title|data-.+|scope|rowspan|colspan|headers/
             }
         ) << '>'
         tableAttrs.currentTag = 'td'
         out << body()
-        out << '</td>'
+        out << '</' << tag << '>'
         tableAttrs.currentTag = prevTag
     }
 
