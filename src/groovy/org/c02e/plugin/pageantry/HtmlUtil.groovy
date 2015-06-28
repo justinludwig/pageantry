@@ -9,8 +9,8 @@ class HtmlUtil {
 
             // special-case map of css style property:values
             if (value instanceof Map && key == 'style')
-                value = value.findAll { k,v -> 
-                    k && (v || v == 0) 
+                value = value.findAll { k,v ->
+                    k && (v || v == 0)
                 }.collect { k,v -> "$k:$v" }
 
             // if value is list, use first entry

@@ -307,7 +307,7 @@ class PageantryTagLib {
 
     /**
      * Displays prev/next links.
-     * @param prev (optional) Text for prev link; defaults to 
+     * @param prev (optional) Text for prev link; defaults to
      * 'grails.plugin.pageantry.prevnext.prev' message key or '&laquo; Prev'.
      * @param next (optional) Text for next link; defaults to
      * 'grails.plugin.pageantry.prevnext.next' message key or 'Next &raquo;'.
@@ -367,7 +367,7 @@ class PageantryTagLib {
      * @param firstlast (optional) True to always show links to overall
      * first and last pages (eg 1..11 12 13..100 instead of ..11 12 13..).
      * Defaults to true.
-     * @param more (optional) Text for "more" spacers (...); defaults to 
+     * @param more (optional) Text for "more" spacers (...); defaults to
      * 'grails.plugin.pageantry.pages.more' message key or '&hellip;'.
      */
     def pages = { attrs, body ->
@@ -436,7 +436,7 @@ class PageantryTagLib {
 
     /**
      * Displays total message.
-     * @param msg (optional) Text for standard message; defaults to 
+     * @param msg (optional) Text for standard message; defaults to
      * 'grails.plugin.pageantry.total.msg' message key or '{0} - {1} of {2}'
      * (ie 'START - END of TOTAL').
      * @param unknown (optional) Text for message with unknown total; defaults to
@@ -487,7 +487,7 @@ class PageantryTagLib {
 
     /**
      * Displays dropdown to change max.
-     * @param msg (optional) Text for dropdown label; defaults to 
+     * @param msg (optional) Text for dropdown label; defaults to
      * 'grails.plugin.pageantry.resize.msg' message key or 'Items Per Page:'.
      * @param sizes (optional) Space separated size options; defaults to
      * 'grails.plugin.pageantry.total.sizes' message key or '10 20 50 100 All'.

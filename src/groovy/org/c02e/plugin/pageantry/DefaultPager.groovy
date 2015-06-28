@@ -34,7 +34,7 @@ class DefaultPager implements Pager {
 
     /** List of valid sort column names, or empty to not validate names. */
     List<String> validSort = []
-    /** 
+    /**
      * Map of public column names to literal column names.
      * If validSort not set, the keys of this map are used for validSort.
      */
@@ -191,7 +191,7 @@ class DefaultPager implements Pager {
         return m
     }
 
-    /** 
+    /**
      * SQL ORDER and LIMIT clauses.
      * For safety, includes sorting values only if validSort has been set.
      */
@@ -199,7 +199,7 @@ class DefaultPager implements Pager {
         [sqlOrder, sqlLimit].findAll { it }.join(' ')
     }
 
-    /** 
+    /**
      * SQL ORDER clause.
      * For safety, includes sorting values only if validSort has been set.
      */
@@ -224,7 +224,7 @@ class DefaultPager implements Pager {
         sql.join('')
     }
 
-    /** 
+    /**
      * SQL LIMIT clause.
      */
     String getSqlLimit() {
