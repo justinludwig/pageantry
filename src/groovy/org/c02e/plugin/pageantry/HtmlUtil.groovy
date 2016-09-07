@@ -1,4 +1,4 @@
-package org.c02e.plugin.pagentry
+package org.c02e.plugin.pageantry
 
 class HtmlUtil {
 

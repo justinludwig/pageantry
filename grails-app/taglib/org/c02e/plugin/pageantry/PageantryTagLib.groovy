@@ -1,6 +1,6 @@
 package org.c02e.plugin.pageantry
 
-import org.c02e.plugin.pagentry.HtmlUtil as H
+import org.c02e.plugin.pageantry.HtmlUtil as H
 
 class PageantryTagLib {
     static namespace = 'pageantry'
